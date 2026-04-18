@@ -66,6 +66,10 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 // ── Health check ─────────────────────────────────────────────────────────────
+app.get('/', (_req, res) => {
+  res.json({ message: "Welcome to the Plotter API! Use /api/health to check status." });
+});
+
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });

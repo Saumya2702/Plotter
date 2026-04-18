@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import axios from 'axios';
 import { getStoryDetails, getStoriesInBbox } from '../services/api';
 import StoryPopup from './StoryPopup';
 import StoryModal from './StoryModal';
@@ -197,9 +198,9 @@ export default function MapView({ session, theme }) {
           const params = new URLSearchParams(window.location.search);
           const sharedStoryId = params.get('story');
           if (sharedStoryId) {
-            axios.get(`http://localhost:4000/api/stories/${sharedStoryId}`).then(res => {
-              if (res.data && res.data.story) {
-                e.target.flyTo([res.data.story.lat, res.data.story.lng], 14, { duration: 1.5 });
+            getStoryDetails(sharedStoryId).then(data => {
+              if (data && data.story) {
+                e.target.flyTo([data.story.lat, data.story.lng], 14, { duration: 1.5 });
               }
             });
           }

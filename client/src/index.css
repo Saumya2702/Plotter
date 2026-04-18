@@ -1,0 +1,147 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import 'leaflet/dist/leaflet.css';
+
+:root {
+  --font-ui: 'Inter', system-ui, sans-serif;
+  --font-story: Georgia, serif;
+  
+  --color-primary: #B08968;
+  --color-hover: #9C6F4E;
+  --color-accent: #EDE0D4;
+  --color-bg: #1B1B1B;
+
+  --color-memory: var(--color-primary);
+  --color-legend: var(--color-primary);
+  --color-myth: var(--color-primary);
+  --color-news: var(--color-primary);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  background-color: var(--color-bg);
+  color: var(--color-accent);
+  overflow: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.light {
+  background-color: var(--color-accent);
+  color: var(--color-bg);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Leaflet overrides */
+.leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  padding: 0;
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: none !important;
+  background-color: #fff;
+  color: #111;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  width: 360px !important;
+  max-width: 90vw;
+}
+
+.leaflet-popup-tip-container {
+  display: none !important; /* Hide the little triangle for cleaner look */
+}
+
+/* Map Marker Styles inner div */
+.map-marker {
+  border-radius: 50% 50% 50% 0;
+  cursor: pointer;
+  border: 2px solid rgba(255,255,255,0.4);
+  /* Use string interpolation equivalent for transforms */
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: -2px 2px 8px rgba(0,0,0,0.4);
+  pointer-events: auto; /* Leaflet divIcons need this to be clickable */
+  transform: rotate(-45deg);
+}
+
+.map-marker:hover {
+  transform: rotate(-45deg) scale(1.2);
+  border-color: #fff;
+  z-index: 100;
+}
+
+.map-marker.memory { background-color: var(--color-memory); }
+.map-marker.legend { background-color: var(--color-legend); }
+.map-marker.myth { background-color: var(--color-myth); }
+.map-marker.news { background-color: var(--color-news); }
+
+.map-marker.size-sm { width: 14px; height: 14px; }
+.map-marker.size-md { width: 22px; height: 22px; }
+.map-marker.size-lg { width: 32px; height: 32px; }
+
+/* Pulse animation for dropping pin */
+@keyframes pulseRing {
+  0% { transform: scale(0.5); opacity: 1; }
+  100% { transform: scale(3); opacity: 0; }
+}
+
+.pulse-ring {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  animation: pulseRing 1.2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+  box-shadow: 0 0 10px rgba(255,255,255,0.8);
+}
+
+.cursor-crosshair .leaflet-container {
+  cursor: crosshair !important;
+}
+
+/* Bottom Sheet mobile styles */
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  color: #111;
+  border-radius: 20px 20px 0 0;
+  z-index: 1000;
+  padding: 20px;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.bottom-sheet.open {
+  transform: translateY(0);
+}
+
+@media (max-width: 768px) {
+  .story-popup-desktop {
+    display: none !important;
+  }
+}
+@media (min-width: 769px) {
+  .story-popup-mobile {
+    display: none !important;
+  }
+}
+
+.story-body-text {
+  font-family: var(--font-story);
+  line-height: 1.6;
+  font-size: 15px;
+  color: #333;
+}

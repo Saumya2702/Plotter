@@ -2,7 +2,6 @@
 
 const storiesService = require('../services/stories.service');
 const notificationsService = require('../services/notifications.service');
-const { sendNotificationEmail } = require('../services/email.service');
 
 async function getStoriesInBbox(req, res, next) {
   try {
@@ -60,31 +59,19 @@ async function createStory(req, res, next) {
       parentId: parentId ? parseInt(parentId, 10) : null
     });
 
-    // ── Notifications (Email & In-App) ──────────────────────────
+    // ── Notifications (In-App) ──────────────────────────
     if (parentId) {
       (async () => {
         try {
           const parentStory = await storiesService.getStoryOwnerInfo(parseInt(parentId, 10));
           if (parentStory && userId !== parentStory.user_id) {
-             // In-App
              await notificationsService.createNotification({
                userId: parentStory.user_id,
                actorId: userId,
                type: 'thread',
-               story_id: story.id, // Link to the new chapter
+               storyId: story.id, // Link to the new chapter
                content: title.trim()
              });
-
-             // Email
-             if (parentStory.email) {
-               await sendNotificationEmail({
-                 to: parentStory.email,
-                 subject: `Someone continued your tale: "${parentStory.title}"`,
-                 title: 'New Chapter Added',
-                 body: `<strong>${authorName}</strong> just added a new chapter to your journey "${parentStory.title}".`,
-                 storyId: story.id // Link to the new story
-               });
-             }
           }
         } catch (err) {
           console.warn('[Notification] Background thread processing failed:', err.message);

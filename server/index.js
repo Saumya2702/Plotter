@@ -97,10 +97,22 @@ app.use((_req, res) => {
 
 app.use(errorHandler);
 
+// ── Background Services ──────────────────────────────────────────────────────
+const notificationsService = require('./services/notifications.service');
+
+// Run cleanup once on startup
+notificationsService.cleanupOldNotifications().catch(console.error);
+
+// Run cleanup every 24 hours
+setInterval(() => {
+  notificationsService.cleanupOldNotifications().catch(console.error);
+}, 24 * 60 * 60 * 1000);
+
 // ── Start server ─────────────────────────────────────────────────────────────
 app.listen(PORT, () => {
   console.log(`[Server] Plotter API running on http://localhost:${PORT}`);
   console.log(`[Server] Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`[Server] Notification Janitor is active (24h cycle)`);
 });
 
 module.exports = app; 

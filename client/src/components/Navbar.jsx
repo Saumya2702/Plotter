@@ -164,6 +164,9 @@ export default function Navbar({ session, theme, setTheme, setShowAuth }) {
                               {n.type === 'comment' && ' shared a reflection on '}
                               {n.type === 'reply' && ' replied to your whisper on '}
                               {n.type === 'thread' && ' added a new chapter to '}
+                              {n.type === 'like' && ' liked your story '}
+                              {n.type === 'haunt' && ' haunted your story '}
+                              {n.type === 'legend' && ' mark as legend your story '}
                               <strong>"{n.story_title}"</strong>
                            </div>
                            <div style={{ fontSize: '11px', opacity: 0.4, marginTop: '4px' }}>

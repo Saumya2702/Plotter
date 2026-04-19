@@ -1,4 +1,6 @@
 const reactionsService = require('../services/reactions.service');
+const storiesService = require('../services/stories.service');
+const notificationsService = require('../services/notifications.service');
 
 async function toggleReaction(req, res, next) {
   try {
@@ -10,11 +12,33 @@ async function toggleReaction(req, res, next) {
       return res.status(400).json({ error: 'Invalid reaction type' });
     }
 
-    if (isNaN(parseInt(storyId, 10))) {
+    const storyIdInt = parseInt(storyId, 10);
+    if (isNaN(storyIdInt)) {
       return res.status(400).json({ error: 'Invalid story ID' });
     }
 
-    const result = await reactionsService.toggleReaction(userId, storyId, type);
+    const result = await reactionsService.toggleReaction(userId, storyIdInt, type);
+
+    // ── Notifications (In-App) ──────────────────────────
+    if (result.status === 'added') {
+      (async () => {
+        try {
+          const storyOwner = await storiesService.getStoryOwnerInfo(storyIdInt);
+          if (storyOwner && userId !== storyOwner.user_id) {
+            await notificationsService.createNotification({
+              userId: storyOwner.user_id,
+              actorId: userId,
+              type: result.type, // 'like', 'haunt', 'legend'
+              storyId: storyIdInt,
+              content: null // Reactions don't have text content
+            });
+          }
+        } catch (err) {
+          console.warn('[Notification] Background reaction processing failed:', err.message);
+        }
+      })();
+    }
+
     res.json(result);
   } catch (err) {
     next(err);

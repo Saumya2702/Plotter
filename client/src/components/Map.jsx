@@ -109,7 +109,9 @@ export default function MapView({ session, theme, setShowAuth }) {
 
   const createCustomIcon = (story) => {
     const reactions = parseInt(story.reaction_count || 0, 10);
-    const size = Math.min(Math.max(12 + (reactions * 2), 14), 36);
+    const comments = parseInt(story.comment_count || 0, 10);
+    const activity = reactions + comments;
+    const size = Math.min(Math.max(12 + (activity * 2), 14), 36);
     
     return L.divIcon({
       html: `<div class="pin-marker pin-${story.category}" style="width:${size}px; height:${size}px;"></div>`,

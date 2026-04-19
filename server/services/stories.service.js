@@ -28,7 +28,8 @@ async function getStoriesInBbox(minLng, minLat, maxLng, maxLat) {
       ST_Y(s.location::geometry) AS lat,
       u.username,
       u.avatar_url,
-      (SELECT COUNT(*) FROM reactions r WHERE r.story_id = s.id) AS reaction_count
+      (SELECT COUNT(*) FROM reactions r WHERE r.story_id = s.id) AS reaction_count,
+      (SELECT COUNT(*) FROM public.comments c WHERE c.story_id = s.id) AS comment_count
     FROM stories s
     LEFT JOIN public.users u ON s.user_id = u.id
     WHERE ST_Within(
@@ -123,7 +124,7 @@ async function createStory({ userId, category, title, content, lat, lng, placeNa
 
 async function getStoryOwnerInfo(storyId) {
   const sql = `
-    SELECT u.email, u.username, s.title
+    SELECT u.id as user_id, u.email, u.username, s.title
     FROM stories s
     JOIN public.users u ON s.user_id = u.id
     WHERE s.id = $1

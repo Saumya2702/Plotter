@@ -52,9 +52,22 @@ async function markAllAsRead(userId) {
   return { success: true };
 }
 
+async function cleanupOldNotifications() {
+  const sql = `
+    DELETE FROM notifications 
+    WHERE is_read = TRUE 
+    AND created_at < NOW() - INTERVAL '7 days'
+  `;
+  const { rowCount } = await pool.query(sql);
+  if (rowCount > 0) {
+    console.log(`[Janitor] Cleaned up ${rowCount} old notifications.`);
+  }
+}
+
 module.exports = {
   getNotifications,
   createNotification,
   markAsRead,
-  markAllAsRead
+  markAllAsRead,
+  cleanupOldNotifications
 };

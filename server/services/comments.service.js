@@ -12,7 +12,7 @@ async function createComment({ userId, storyId, content, parentId }) {
 
 async function getCommentOwnerInfo(commentId) {
   const sql = `
-    SELECT u.email, u.username
+    SELECT c.user_id, u.email, u.username
     FROM public.comments c
     JOIN public.users u ON c.user_id = u.id
     WHERE c.id = $1

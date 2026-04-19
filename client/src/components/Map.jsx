@@ -238,9 +238,6 @@ export default function MapView({ session, theme, setShowAuth }) {
     </div>
   );
 }
-    </div>
-  );
-}
 
 function ZoomHelper({ position }) {
   const map = useMap();

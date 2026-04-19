@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import toast from 'react-hot-toast';
 import { getUserProfile, updateUserProfile } from '../services/api';
@@ -7,6 +7,7 @@ import { User, Heart, Map as MapIcon, Edit2, Check, X as CloseIcon } from 'lucid
 
 export default function Profile() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [currentUserData, setCurrentUserData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -159,7 +160,24 @@ export default function Profile() {
         
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>
           {profile.stories.map(s => (
-            <div key={s.id} className="glass-panel" style={{ padding: isMobile ? '16px' : '24px 32px', borderRadius: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+            <div 
+              key={s.id} 
+              onClick={() => navigate(`/?story=${s.id}`)}
+              className="glass-panel" 
+              style={{ 
+                padding: isMobile ? '16px' : '24px 32px', borderRadius: '16px', 
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px',
+                cursor: 'pointer', transition: 'transform 0.2s, background 0.2s'
+              }}
+              onMouseOver={e => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+              }}
+              onMouseOut={e => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.background = 'var(--color-glass)';
+              }}
+            >
                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '12px' : '20px' }}>
                   <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: `var(--color-${s.category})`, display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.6, flexShrink: 0 }}>
                     <MapIcon size={20} color="#fff" />

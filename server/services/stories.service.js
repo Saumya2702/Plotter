@@ -121,4 +121,15 @@ async function createStory({ userId, category, title, content, lat, lng, placeNa
   return rows[0];
 }
 
-module.exports = { getStoriesInBbox, getStoryById, createStory };
+async function getStoryOwnerInfo(storyId) {
+  const sql = `
+    SELECT u.email, u.username, s.title
+    FROM stories s
+    JOIN public.users u ON s.user_id = u.id
+    WHERE s.id = $1
+  `;
+  const { rows } = await pool.query(sql, [storyId]);
+  return rows[0];
+}
+
+module.exports = { getStoriesInBbox, getStoryById, createStory, getStoryOwnerInfo };

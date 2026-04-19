@@ -1,6 +1,7 @@
 
 
 const storiesService = require('../services/stories.service');
+const { sendNotificationEmail } = require('../services/email.service');
 
 async function getStoriesInBbox(req, res, next) {
   try {
@@ -39,7 +40,8 @@ async function getStoryById(req, res, next) {
 async function createStory(req, res, next) {
   try {
     const { title, content, lat, lng, category, placeName, imageUrl, parentId } = req.body;
-    const userId = req.user.id; // From auth.middleware.js
+    const userId = req.user.id;
+    const authorName = req.user.user_metadata?.username || 'Someone';
 
     if (!title || !content || isNaN(Number(lat)) || isNaN(Number(lng))) {
       return res.status(400).json({ error: 'Missing required map pin fields' });
@@ -57,11 +59,30 @@ async function createStory(req, res, next) {
       parentId: parentId ? parseInt(parentId, 10) : null
     });
 
+    // ── Email Notifications (Threads) ───────────────────────────
+    if (parentId) {
+      (async () => {
+        try {
+          const parentStory = await storiesService.getStoryOwnerInfo(parseInt(parentId, 10));
+          if (parentStory && parentStory.email && userId !== parentStory.user_id) {
+             await sendNotificationEmail({
+               to: parentStory.email,
+               subject: `Someone continued your tale: "${parentStory.title}"`,
+               title: 'New Chapter Added',
+               body: `<strong>${authorName}</strong> just added a new chapter to your journey "${parentStory.title}".`,
+               storyId: story.id // Link to the new story
+             });
+          }
+        } catch (emailErr) {
+          console.warn('[Email] Background thread notification failed:', emailErr.message);
+        }
+      })();
+    }
+
     res.status(201).json({ story });
   } catch (err) {
     next(err);
   }
 }
 
-// Ensure the old addReply export is safely removed or replaced
 module.exports = { getStoriesInBbox, getStoryById, createStory };

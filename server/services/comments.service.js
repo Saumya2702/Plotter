@@ -10,4 +10,15 @@ async function createComment({ userId, storyId, content, parentId }) {
   return rows[0];
 }
 
-module.exports = { createComment };
+async function getCommentOwnerInfo(commentId) {
+  const sql = `
+    SELECT u.email, u.username
+    FROM public.comments c
+    JOIN public.users u ON c.user_id = u.id
+    WHERE c.id = $1
+  `;
+  const { rows } = await pool.query(sql, [commentId]);
+  return rows[0];
+}
+
+module.exports = { createComment, getCommentOwnerInfo };

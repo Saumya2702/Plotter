@@ -1,5 +1,6 @@
 const commentsService = require('../services/comments.service');
 const storiesService = require('../services/stories.service');
+const notificationsService = require('../services/notifications.service');
 const { sendNotificationEmail } = require('../services/email.service');
 
 async function createComment(req, res, next) {
@@ -21,38 +22,61 @@ async function createComment(req, res, next) {
       parentId: parentCommentId ? parseInt(parentCommentId, 10) : null
     });
 
-    // ── Email Notifications ─────────────────────────────────────
-    // Use an async immediate function so we don't block the response
+    // ── Notifications (Email & In-App) ──────────────────────────
     (async () => {
       try {
         const storyOwner = await storiesService.getStoryOwnerInfo(storyIdInt);
         
         // Notify Story Owner
-        if (storyOwner && storyOwner.email && userId !== storyOwner.user_id) {
-          await sendNotificationEmail({
-            to: storyOwner.email,
-            subject: `New reflection on "${storyOwner.title}"`,
-            title: 'New Reflection',
-            body: `<strong>${commenterName}</strong> shared a new whisper on your story "${storyOwner.title}".`,
-            storyId: storyIdInt
+        if (storyOwner && userId !== storyOwner.user_id) {
+          // In-App
+          await notificationsService.createNotification({
+            userId: storyOwner.user_id,
+            actorId: userId,
+            type: 'comment',
+            storyId: storyIdInt,
+            content: content.trim().substring(0, 100)
           });
+
+          // Email
+          if (storyOwner.email) {
+            await sendNotificationEmail({
+              to: storyOwner.email,
+              subject: `New reflection on "${storyOwner.title}"`,
+              title: 'New Reflection',
+              body: `<strong>${commenterName}</strong> shared a new whisper on your story "${storyOwner.title}".`,
+              storyId: storyIdInt
+            });
+          }
         }
 
         // Notify Parent Comment Author (if reply)
         if (parentCommentId) {
           const parentOwner = await commentsService.getCommentOwnerInfo(parseInt(parentCommentId, 10));
-          if (parentOwner && parentOwner.email && userId !== parentOwner.user_id) {
-             await sendNotificationEmail({
-               to: parentOwner.email,
-               subject: `New reply to your whisper on "${storyOwner.title}"`,
-               title: 'New Reply',
-               body: `<strong>${commenterName}</strong> replied to your whisper on the story "${storyOwner.title}".`,
-               storyId: storyIdInt
+          if (parentOwner && userId !== parentOwner.user_id) {
+             // In-App
+             await notificationsService.createNotification({
+               userId: parentOwner.user_id,
+               actorId: userId,
+               type: 'reply',
+               storyId: storyIdInt,
+               content: content.trim().substring(0, 100)
              });
+
+             // Email
+             if (parentOwner.email) {
+               await sendNotificationEmail({
+                 to: parentOwner.email,
+                 subject: `New reply to your whisper on "${storyOwner.title}"`,
+                 title: 'New Reply',
+                 body: `<strong>${commenterName}</strong> replied to your whisper on the story "${storyOwner.title}".`,
+                 storyId: storyIdInt
+               });
+             }
           }
         }
-      } catch (emailErr) {
-        console.warn('[Email] Background notification failed:', emailErr.message);
+      } catch (err) {
+        console.warn('[Notification] Background processing failed:', err.message);
       }
     })();
 

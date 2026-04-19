@@ -87,6 +87,7 @@ app.use('/api/stories/:storyId/comments', require('./routes/comments.routes'));
 app.use('/api/reactions', require('./routes/reactions.routes'));
 app.use('/api/explore', require('./routes/explore.routes'));
 app.use('/api/users', require('./routes/users.routes'));
+app.use('/api/notifications', require('./routes/notifications.routes'));
 
 // ── 404 handler ──────────────────────────────────────────────────────────────
 app.use((_req, res) => {

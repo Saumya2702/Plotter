@@ -1,12 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { Sun, Moon, Menu, User, LogOut, X } from 'lucide-react';
+import { Sun, Moon, Menu, User, LogOut, X, Bell } from 'lucide-react';
 import AuthModal from './AuthModal';
+import { getNotifications, markRead, markAllRead } from '../services/api';
 
 export default function Navbar({ session, theme, setTheme, setShowAuth }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (session) {
+      const fetchNotifs = () => {
+        getNotifications(session.access_token).then(setNotifications).catch(console.error);
+      };
+      fetchNotifs();
+      const interval = setInterval(fetchNotifs, 30000); // Poll every 30s
+      return () => clearInterval(interval);
+    }
+  }, [session]);
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
+  const handleNotificationClick = async (n) => {
+    setNotificationsOpen(false);
+    if (!n.is_read) {
+      setNotifications(prev => prev.map(notif => notif.id === n.id ? { ...notif, is_read: true } : notif));
+      markRead(n.id, session.access_token).catch(console.error);
+    }
+    navigate(`/?story=${n.story_id}`);
+  };
+
+  const markAllAllRead = async () => {
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    markAllRead(session.access_token).catch(console.error);
+  };
 
   const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
 
@@ -71,9 +101,87 @@ export default function Navbar({ session, theme, setTheme, setShowAuth }) {
             </button>
           )}
 
+          {session && (
+            <div style={{ position: 'relative' }}>
+              <button 
+                onClick={() => { setNotificationsOpen(!notificationsOpen); setMenuOpen(false); }}
+                style={{ 
+                  background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text)',
+                  padding: '8px', display: 'flex', alignItems: 'center', position: 'relative'
+                }}
+              >
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span style={{
+                    position: 'absolute', top: '6px', right: '6px', width: '8px', height: '8px',
+                    background: '#E53E3E', borderRadius: '50%', border: '2px solid var(--color-navbar-bg)'
+                  }} />
+                )}
+              </button>
+
+              {notificationsOpen && (
+                <div 
+                  className="animate-fade-in"
+                  style={{
+                    position: 'absolute', top: '50px', right: 0, width: '280px',
+                    maxHeight: '400px', overflowY: 'auto',
+                    background: 'var(--color-card-bg)', border: '1px solid var(--color-border)',
+                    borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+                    padding: '8px', zIndex: 2100
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', marginBottom: '8px', borderBottom: '1px solid var(--color-border)' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', opacity: 0.6, textTransform: 'uppercase' }}>Notifications</span>
+                    {unreadCount > 0 && (
+                      <button 
+                        onClick={() => { markAllAllRead(); }}
+                        style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                  </div>
+
+                  {notifications.length === 0 ? (
+                    <div style={{ padding: '20px', textAlign: 'center', opacity: 0.5, fontSize: '13px' }}>No alerts yet...</div>
+                  ) : (
+                    notifications.map(n => (
+                      <div 
+                        key={n.id}
+                        onClick={() => handleNotificationClick(n)}
+                        style={{
+                          padding: '12px', borderRadius: '8px', cursor: 'pointer',
+                          background: n.is_read ? 'transparent' : 'rgba(232, 117, 74, 0.05)',
+                          display: 'flex', gap: '12px', marginBottom: '4px', transition: 'background 0.2s'
+                        }}
+                        onMouseOver={e => e.currentTarget.style.background = 'var(--color-glass)'}
+                        onMouseOut={e => e.currentTarget.style.background = n.is_read ? 'transparent' : 'rgba(232, 117, 74, 0.05)'}
+                      >
+                        <img src={n.actor_avatar || `https://api.dicebear.com/7.x/notionists/svg?seed=${n.actor_name}`} style={{ width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0 }} alt="" />
+                        <div style={{ flex: 1 }}>
+                           <div style={{ fontSize: '13px', lineHeight: '1.4' }}>
+                              <strong>{n.actor_name}</strong> 
+                              {n.type === 'comment' && ' shared a reflection on '}
+                              {n.type === 'reply' && ' replied to your whisper on '}
+                              {n.type === 'thread' && ' added a new chapter to '}
+                              <strong>"{n.story_title}"</strong>
+                           </div>
+                           <div style={{ fontSize: '11px', opacity: 0.4, marginTop: '4px' }}>
+                             {new Date(n.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                           </div>
+                        </div>
+                        {!n.is_read && <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--color-primary)', marginTop: '6px' }} />}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
           <div style={{ position: 'relative' }}>
             <button 
-              onClick={() => setMenuOpen(!menuOpen)}
+              onClick={() => { setMenuOpen(!menuOpen); setNotificationsOpen(false); }}
               style={{ 
                 background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text)',
                 padding: '8px', display: 'flex', alignItems: 'center' 

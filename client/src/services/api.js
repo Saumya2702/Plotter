@@ -63,6 +63,23 @@ export const postComment = async (storyId, content, token, parentCommentId = nul
   });
   return response.data;
 };
+export const getNotifications = async (token) => {
+  const { data } = await api.get('/notifications', {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return data;
+};
 
+export const markAllRead = async (token) => {
+  const { data } = await api.post('/notifications/mark-all-read', {}, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return data;
+};
 
-
+export const markRead = async (id, token) => {
+  const { data } = await api.post(`/notifications/${id}/read`, {}, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  return data;
+};

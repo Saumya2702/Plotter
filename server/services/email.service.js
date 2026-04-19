@@ -2,8 +2,7 @@ const { Resend } = require('resend');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const BASE_URL = 'https://plotter-one.vercel.app';
-const FROM_EMAIL = 'onboarding@resend.dev'; // Default for new accounts. Update after domain verification.
-
+const FROM_EMAIL = 'onboarding@resend.dev';
 async function sendNotificationEmail({ to, subject, title, body, storyId }) {
   if (!process.env.RESEND_API_KEY) {
     console.warn('[Email] Skipping email send: RESEND_API_KEY not found');

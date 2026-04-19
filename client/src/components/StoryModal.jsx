@@ -26,7 +26,7 @@ export default function StoryModal({ location, session, onClose, parentId = null
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.title.trim() || !formData.content.trim()) return;
-    
+
     setLoading(true);
     try {
       await createStory({
@@ -55,7 +55,7 @@ export default function StoryModal({ location, session, onClose, parentId = null
         background: '#F7F3EE', color: '#2A1F14'
       }}>
         <div style={{ height: '8px', background: 'var(--color-primary)' }} />
-        
+
         <div style={{ padding: '32px 24px' }}>
           <button
             onClick={() => onClose(false)}
@@ -64,9 +64,9 @@ export default function StoryModal({ location, session, onClose, parentId = null
             <X size={24} />
           </button>
 
-          <h2 style={{ 
+          <h2 style={{
             fontFamily: 'var(--font-story)', fontSize: '28px', color: '#2A1F14',
-            margin: '0 0 24px 0', fontWeight: 'bold' 
+            margin: '0 0 24px 0', fontWeight: 'bold'
           }}>
             Drop a story
           </h2>
@@ -87,9 +87,9 @@ export default function StoryModal({ location, session, onClose, parentId = null
                 <select
                   value={formData.category}
                   onChange={e => setFormData({ ...formData, category: e.target.value })}
-                  style={{ 
-                    width: '100%', padding: '12px', borderRadius: '12px', 
-                    border: '1.5px solid rgba(42,31,20,0.1)', 
+                  style={{
+                    width: '100%', padding: '12px', borderRadius: '12px',
+                    border: '1.5px solid rgba(42,31,20,0.1)',
                     background: '#fff', color: '#2A1F14',
                     fontSize: '15px', fontWeight: '600'
                   }}
@@ -109,9 +109,9 @@ export default function StoryModal({ location, session, onClose, parentId = null
                 placeholder="A name for this memory..."
                 value={formData.title}
                 onChange={e => setFormData({ ...formData, title: e.target.value })}
-                style={{ 
-                  width: '100%', padding: '12px 0', border: 'none', 
-                  borderBottom: '2.5px solid rgba(42,31,20,0.1)', outline: 'none', 
+                style={{
+                  width: '100%', padding: '12px 0', border: 'none',
+                  borderBottom: '2.5px solid rgba(42,31,20,0.1)', outline: 'none',
                   fontSize: '20px', fontWeight: '700', background: 'transparent',
                   color: '#2A1F14'
                 }}
@@ -126,8 +126,8 @@ export default function StoryModal({ location, session, onClose, parentId = null
                 placeholder="What once happened here?"
                 value={formData.content}
                 onChange={e => setFormData({ ...formData, content: e.target.value })}
-                style={{ 
-                  width: '100%', border: 'none', outline: 'none', fontSize: '17px', 
+                style={{
+                  width: '100%', border: 'none', outline: 'none', fontSize: '17px',
                   lineHeight: '1.6', resize: 'none', background: 'transparent',
                   color: '#2A1F14', fontFamily: 'var(--font-story)'
                 }}
@@ -153,8 +153,4 @@ export default function StoryModal({ location, session, onClose, parentId = null
     </div>
   );
 }
-        </div>
-      </div>
-    </div>
-  );
-}
+

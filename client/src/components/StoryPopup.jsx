@@ -3,7 +3,7 @@ import { getStoryDetails, postReaction, postComment } from '../services/api';
 import { X, Heart, MessageCircle, Share, GitBranch, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-export default function StoryPopup({ story, onClose, session, onReply, setShowAuth }) {
+export default function StoryPopup({ story, onClose, session, onReply, setShowAuth, onStorySelect }) {
   const [fullStory, setFullStory] = useState(null);
   const [threadOpen, setThreadOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -164,11 +164,23 @@ export default function StoryPopup({ story, onClose, session, onReply, setShowAu
              ) : (
                <>
                  {fullStory?.thread?.map(t => (
-                   <div key={t.id} style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                   <div 
+                    key={t.id} 
+                    onClick={() => onStorySelect(t)}
+                    style={{ 
+                      display: 'flex', gap: '12px', marginBottom: '16px', cursor: 'pointer',
+                      padding: '10px', borderRadius: '12px', transition: 'background 0.2s'
+                    }}
+                    onMouseOver={e => e.currentTarget.style.background = 'rgba(0,0,0,0.03)'}
+                    onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+                   >
                      <div style={{ width: '2px', background: 'var(--color-primary)', opacity: 0.3, borderRadius: '2px' }} />
                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: '14px', fontWeight: '700' }}>{t.title}</div>
-                        <div style={{ fontSize: '12px', opacity: 0.5 }}>by {t.username}</div>
+                        <div style={{ fontSize: '14px', fontWeight: '700', marginBottom: '4px' }}>{t.title}</div>
+                        <div style={{ fontSize: '13px', opacity: 0.7, marginBottom: '4px', fontStyle: 'italic' }}>
+                          "{t.content.substring(0, 80)}{t.content.length > 80 ? '...' : ''}"
+                        </div>
+                        <div style={{ fontSize: '11px', opacity: 0.5 }}>by {t.username}</div>
                      </div>
                    </div>
                  ))}

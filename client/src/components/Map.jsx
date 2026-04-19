@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet';
+import { useSearchParams } from 'react-router-dom';
 import L from 'leaflet';
-import { getStoriesInBbox } from '../services/api';
+import { getStoriesInBbox, getStoryDetails } from '../services/api';
 import StoryPopup from './StoryPopup';
 import StoryModal from './StoryModal';
 import { Plus, Navigation, Map as MapIcon, LocateFixed } from 'lucide-react';
@@ -40,7 +41,7 @@ function MapEvents({ fetchStories, dropMode, onMapClick, setLocationName }) {
   useEffect(() => {
     const handleFlyTo = (e) => {
       const { lat, lng } = e.detail;
-      map.flyTo([lat, lng], 12, { duration: 2 });
+      map.flyTo([lat, lng], 14, { duration: 2 });
     };
     window.addEventListener('map-fly-to', handleFlyTo);
     return () => window.removeEventListener('map-fly-to', handleFlyTo);
@@ -64,6 +65,7 @@ export default function MapView({ session, theme, setShowAuth }) {
   const [locationName, setLocationName] = useState('India');
   const [loading, setLoading] = useState(true);
   const [parentId, setParentId] = useState(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const fetchStories = useCallback(async (mapInstance) => {
     setLoading(true);
@@ -79,6 +81,21 @@ export default function MapView({ session, theme, setShowAuth }) {
     }
   }, []);
 
+  // Handle URL Story Parameter
+  useEffect(() => {
+    const storyId = searchParams.get('story');
+    if (storyId) {
+      getStoryDetails(storyId).then(res => {
+        if (res.story) {
+          setActiveStory(res.story);
+          window.dispatchEvent(new CustomEvent('map-fly-to', { 
+            detail: { lat: res.story.lat, lng: res.story.lng } 
+          }));
+        }
+      }).catch(err => console.error("URL story not found", err));
+    }
+  }, [searchParams]);
+
   const handleMapClick = (e) => {
     if (dropMode) {
       setNewPinLoc({ lng: e.latlng.lng, lat: e.latlng.lat });
@@ -86,6 +103,7 @@ export default function MapView({ session, theme, setShowAuth }) {
       setTimeout(() => setIsEditorOpen(true), 600);
     } else {
       setActiveStory(null);
+      setSearchParams({});
     }
   };
 
@@ -173,6 +191,10 @@ export default function MapView({ session, theme, setShowAuth }) {
               click: (e) => {
                 L.DomEvent.stopPropagation(e);
                 setActiveStory(story);
+                setSearchParams({ story: story.id });
+                window.dispatchEvent(new CustomEvent('map-fly-to', { 
+                  detail: { lat: story.lat, lng: story.lng } 
+                }));
               }
             }}
           />
@@ -215,10 +237,20 @@ export default function MapView({ session, theme, setShowAuth }) {
       {activeStory && (
         <StoryPopup
           story={activeStory}
-          onClose={() => setActiveStory(null)}
+          onClose={() => {
+            setActiveStory(null);
+            setSearchParams({});
+          }}
           session={session}
           setShowAuth={setShowAuth}
           onReply={() => handleReplyInit(activeStory)}
+          onStorySelect={(s) => {
+            setActiveStory(s);
+            setSearchParams({ story: s.id });
+            window.dispatchEvent(new CustomEvent('map-fly-to', { 
+              detail: { lat: s.lat, lng: s.lng } 
+            }));
+          }}
         />
       )}
 

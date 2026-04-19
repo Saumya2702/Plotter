@@ -37,9 +37,16 @@ const allowedOrigins = [
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Allow if no origin (legacy/mobile) or if it's a known origin
+      const isAllowed = !origin || 
+                       allowedOrigins.includes(origin) || 
+                       origin.endsWith('.vercel.app') || 
+                       origin.endsWith('.onrender.com');
+      
+      if (isAllowed) {
         callback(null, true);
       } else {
+        console.warn(`[CORS] Blocked request from: ${origin}`);
         callback(new Error(`CORS blocked: ${origin}`));
       }
     },

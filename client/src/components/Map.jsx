@@ -22,7 +22,8 @@ function MapEvents({ fetchStories, dropMode, onMapClick, setLocationName }) {
     try {
       const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${center.lat}&lon=${center.lng}&zoom=10`);
       const data = await res.json();
-      const name = data.address.city || data.address.town || data.address.state || 'Unknown Realm';
+      const addr = data?.address || {};
+      const name = addr.city || addr.town || addr.state || 'Unknown Realm';
       setLocationName(name);
     } catch (err) {
       setLocationName('The Great Beyond');
@@ -135,7 +136,6 @@ export default function MapView({ session }) {
         />
 
         {/* Relocated Zoom Control */}
-        <L.Control.Zoom position="bottomleft" />
         {/* Wait, React Leaflet handles controls differently. I'll use a standard ZoomControl component if needed, or just L.control directly. But standard way is: */}
         {/* <ZoomControl position="bottomleft" /> */}
         {/* Actually, let's just use the native one via a small component */}

@@ -22,7 +22,7 @@ export default function Explore() {
   };
 
   return (
-    <div style={{ marginTop: '72px', minHeight: 'calc(100vh - 72px)', background: '#0F0C1E', color: '#fff' }}>
+    <div style={{ marginTop: '72px', minHeight: 'calc(100vh - 72px)', background: 'var(--color-bg)', color: 'var(--color-text)' }}>
       <div style={{ padding: '60px 32px', maxWidth: '800px', margin: '0 auto' }} className="animate-fade-in">
         <h1 style={{ fontFamily: 'var(--font-story)', fontSize: '42px', fontWeight: 'bold', marginBottom: '8px' }}>
           Explore the Unseen
@@ -35,7 +35,7 @@ export default function Explore() {
           <div style={{ flex: 1, position: 'relative' }}>
             <Search 
               size={20} 
-              style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} 
+              style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} 
             />
             <input 
               value={q} 
@@ -43,8 +43,8 @@ export default function Explore() {
               placeholder="Search for a keyword or place..."
               disabled={searching}
               style={{
-                width: '100%', padding: '16px 20px 16px 54px', borderRadius: '40px', border: '1px solid rgba(255,255,255,0.1)',
-                background: 'rgba(255,255,255,0.05)', color: '#fff', fontSize: '16px', outline: 'none'
+                width: '100%', padding: '16px 20px 16px 54px', borderRadius: '40px', border: '1px solid var(--color-border)',
+                background: 'var(--color-glass)', color: 'var(--color-text)', fontSize: '16px', outline: 'none'
               }}
             />
           </div>

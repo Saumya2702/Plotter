@@ -6,23 +6,32 @@
   --font-ui: 'Inter', system-ui, sans-serif;
   --font-story: 'Lora', Georgia, serif;
   
-  /* Colors - Deep Night Theme */
+  /* Primary Brand Colors (Fixed) */
   --color-primary: #E8754A; /* Saffron */
   --color-primary-hover: #D4633B;
-  --color-bg: #0F0C1E; /* Deep Night */
-  --color-surface: rgba(26, 26, 46, 0.8);
-  --color-glass: rgba(255, 255, 255, 0.08);
+  
+  /* Shared Defaults */
+  --color-memory: #48BB78;
+  --color-legend: #F6AD55;
+  --color-myth: #F687B3;
+  --color-news: #E8754A;
+
+  /* Theme Dependent - Dark (Default) */
+  --color-bg: #0F0C1E;
+  --color-text: #FFFFFF;
+  --color-navbar-bg: rgba(15, 12, 30, 0.85);
+  --color-card-bg: rgba(26, 26, 46, 0.95);
   --color-border: rgba(255, 255, 255, 0.12);
-  
-  /* Parchment Theme (Story Cards) */
-  --color-parchment: #F7F3EE;
-  --color-parchment-text: #2A1F14;
-  
-  /* Category Colors */
-  --color-memory: #48BB78;  /* Green */
-  --color-legend: #F6AD55;  /* Marigold */
-  --color-myth: #F687B3;    /* Pink */
-  --color-news: #E8754A;    /* Saffron */
+  --color-glass: rgba(255, 255, 255, 0.08);
+}
+
+.light-theme {
+  --color-bg: #F7F3EE; /* Soft Parchment-like light */
+  --color-text: #2A1F14;
+  --color-navbar-bg: rgba(247, 243, 238, 0.9);
+  --color-card-bg: #FFFFFF;
+  --color-border: rgba(0, 0, 0, 0.08);
+  --color-glass: rgba(0, 0, 0, 0.05);
 }
 
 * {
@@ -34,7 +43,7 @@ body {
   font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
   background-color: var(--color-bg);
-  color: #fff;
+  color: var(--color-text);
   overflow: hidden;
 }
 

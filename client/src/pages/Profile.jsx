@@ -59,7 +59,7 @@ export default function Profile() {
   const isOwnProfile = currentUserData && currentUserData.id === profile.id;
 
   return (
-    <div style={{ marginTop: '72px', minHeight: 'calc(100vh - 72px)', background: '#0F0C1E', color: '#fff' }}>
+    <div style={{ marginTop: '72px', minHeight: 'calc(100vh - 72px)', background: 'var(--color-bg)', color: 'var(--color-text)' }}>
       <div style={{ padding: '60px 32px', maxWidth: '900px', margin: '0 auto' }} className="animate-fade-in">
         
         {/* Profile Header Block */}

@@ -4,7 +4,7 @@ import L from 'leaflet';
 import { getStoriesInBbox } from '../services/api';
 import StoryPopup from './StoryPopup';
 import StoryModal from './StoryModal';
-import { Plus, Navigation, Map as MapIcon } from 'lucide-react';
+import { Plus, Navigation, Map as MapIcon, LocateFixed } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 // Component to handle bbox fetching & events
@@ -15,6 +15,13 @@ function MapEvents({ fetchStories, dropMode, onMapClick, setLocationName }) {
       updateLocationName();
     },
     click: (e) => onMapClick(e),
+    locationfound: (e) => {
+      map.flyTo(e.latlng, 14);
+      toast.success("Found your story location!", { icon: '📍' });
+    },
+    locationerror: () => {
+      toast.error("Could not find your location");
+    }
   });
 
   const updateLocationName = async () => {
@@ -48,7 +55,7 @@ function MapEvents({ fetchStories, dropMode, onMapClick, setLocationName }) {
   return null;
 }
 
-export default function MapView({ session }) {
+export default function MapView({ session, theme }) {
   const [stories, setStories] = useState([]);
   const [dropMode, setDropMode] = useState(false);
   const [newPinLoc, setNewPinLoc] = useState(null);
@@ -56,6 +63,7 @@ export default function MapView({ session }) {
   const [activeStory, setActiveStory] = useState(null);
   const [locationName, setLocationName] = useState('India');
   const [loading, setLoading] = useState(true);
+  const [parentId, setParentId] = useState(null);
 
   const fetchStories = useCallback(async (mapInstance) => {
     setLoading(true);
@@ -83,7 +91,6 @@ export default function MapView({ session }) {
 
   const createCustomIcon = (story) => {
     const reactions = parseInt(story.reaction_count || 0, 10);
-    // Scale from 12px to 32px based on reactions
     const size = Math.min(Math.max(12 + (reactions * 2), 14), 36);
     
     return L.divIcon({
@@ -94,8 +101,15 @@ export default function MapView({ session }) {
     });
   };
 
+  const handleReplyInit = (story) => {
+    setParentId(story.id);
+    setDropMode(true);
+    setActiveStory(null);
+    toast.success("Select where the next chapter begins", { icon: '📖' });
+  };
+
   return (
-    <div style={{ width: '100vw', height: '100vh', position: 'relative', background: '#0F0C1E' }}>
+    <div style={{ width: '100vw', height: '100vh', position: 'relative', background: 'var(--color-bg)' }}>
       
       {/* Top Location Badge */}
       <div className="animate-fade-in" style={{
@@ -103,10 +117,11 @@ export default function MapView({ session }) {
         display: 'flex', alignItems: 'center', gap: '8px', pointerEvents: 'none'
       }}>
         <div className="glass-panel" style={{
-          padding: '8px 20px', borderRadius: '30px', display: 'flex', alignItems: 'center', gap: '10px'
+          padding: '10px 24px', borderRadius: '30px', display: 'flex', alignItems: 'center', gap: '10px',
+          background: 'var(--color-navbar-bg)', border: '1px solid var(--color-border)'
         }}>
-          <Navigation size={14} className="text-primary" style={{ color: 'var(--color-primary)' }} />
-          <span style={{ fontSize: '13px', fontWeight: '700', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+          <Navigation size={14} style={{ color: 'var(--color-primary)' }} />
+          <span style={{ fontSize: '13px', fontWeight: '800', letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text)' }}>
             {locationName}
           </span>
         </div>
@@ -116,7 +131,7 @@ export default function MapView({ session }) {
       {!loading && stories.length === 0 && (
         <div style={{
           position: 'absolute', bottom: '40px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000,
-          color: 'rgba(255,255,255,0.5)', fontSize: '14px', fontWeight: '500', pointerEvents: 'none'
+          color: 'var(--color-text)', opacity: 0.4, fontSize: '14px', fontWeight: '500', pointerEvents: 'none'
         }}>
           No stories here yet — be the first to drop one
         </div>
@@ -132,14 +147,14 @@ export default function MapView({ session }) {
       >
         <TileLayer
           attribution='&copy; <a href="https://carto.com/attributions">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          url={theme === 'dark' 
+            ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          }
         />
 
-        {/* Relocated Zoom Control */}
-        {/* Wait, React Leaflet handles controls differently. I'll use a standard ZoomControl component if needed, or just L.control directly. But standard way is: */}
-        {/* <ZoomControl position="bottomleft" /> */}
-        {/* Actually, let's just use the native one via a small component */}
         <ZoomHelper position="bottomleft" />
+        <LocateHelper position="bottomleft" />
 
         <MapEvents 
           fetchStories={fetchStories} 
@@ -166,7 +181,7 @@ export default function MapView({ session }) {
           <Marker 
             position={[newPinLoc.lat, newPinLoc.lng]} 
             icon={L.divIcon({
-              html: '<div style="width:20px;height:20px;border-radius:50%;background:var(--color-primary);box-shadow:0 0 15px var(--color-primary);border:2px solid #fff"></div>',
+              html: `<div style="width:20px;height:20px;border-radius:50%;background:var(--color-primary);box-shadow:0 0 15px var(--color-primary);border:2px solid #fff"></div>`,
               className: 'custom-div-icon',
               iconSize: [20, 20],
               iconAnchor: [10, 10]
@@ -179,6 +194,7 @@ export default function MapView({ session }) {
       <button
         onClick={() => {
           if (!session) return toast.error("Sign in to drop a story");
+          setParentId(null);
           setDropMode(!dropMode);
           if (!dropMode) toast.success("Select a spot on the map", { icon: '📍' });
         }}
@@ -200,6 +216,7 @@ export default function MapView({ session }) {
           story={activeStory}
           onClose={() => setActiveStory(null)}
           session={session}
+          onReply={() => handleReplyInit(activeStory)}
         />
       )}
 
@@ -207,9 +224,11 @@ export default function MapView({ session }) {
         <StoryModal
           location={newPinLoc}
           session={session}
+          parentId={parentId}
           onClose={(didSubmit) => {
             setIsEditorOpen(false);
             setNewPinLoc(null);
+            setParentId(null);
             if (didSubmit) window.dispatchEvent(new Event('resize'));
           }}
         />
@@ -225,6 +244,34 @@ function ZoomHelper({ position }) {
     zoom.addTo(map);
     return () => zoom.remove();
   }, [map, position]);
+  return null;
+}
+
+function LocateHelper({ position }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    // Initial locate on mount
+    map.locate();
+
+    const locateControl = L.Control.extend({
+      options: { position },
+      onAdd: function() {
+        const btn = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+        btn.innerHTML = `<button style="width:34px;height:34px;background:var(--color-navbar-bg);color:var(--color-text);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:4px;box-shadow:0 1px 5px rgba(0,0,0,0.4Hover)"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M3 12h3m12 0h3M12 3v3m0 12v3"/></svg></button>`;
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          map.locate();
+        };
+        return btn;
+      }
+    });
+
+    const control = new locateControl();
+    control.addTo(map);
+    return () => control.remove();
+  }, [map, position]);
+
   return null;
 }
 

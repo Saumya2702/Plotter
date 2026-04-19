@@ -104,6 +104,11 @@ export default function StoryPopup({ story, onClose, session, onReply }) {
               <span style={{ fontSize: '13px', fontWeight: '600' }}>{fullStory?.comments?.length || 0}</span>
             </button>
 
+            <button onClick={() => setThreadOpen(!threadOpen)} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+              <GitBranch size={16} color="#555" />
+              <span style={{ fontSize: '13px', fontWeight: '600' }}>{fullStory?.thread?.length || 0}</span>
+            </button>
+
             <button onClick={() => {
               navigator.clipboard.writeText(window.location.origin + '/?story=' + s.id);
               toast.success("Link copied!");
@@ -113,24 +118,44 @@ export default function StoryPopup({ story, onClose, session, onReply }) {
           </div>
         </div>
 
-        {/* Comments Section (Subtle overlay or dropdown) */}
+        {/* Continuations / Threads */}
+        {threadOpen && fullStory && (
+          <div className="animate-fade-in" style={{ padding: '0 24px 24px', background: 'rgba(0,0,0,0.01)' }}>
+             <h4 style={{ fontSize: '12px', fontWeight: '800', textTransform: 'uppercase', opacity: 0.4, margin: '0 0 12px 0' }}>Continuations</h4>
+             {fullStory.thread?.map(t => (
+               <div key={t.id} style={{ display: 'flex', gap: '12px', marginBottom: '12px', opacity: 0.8 }}>
+                 <div style={{ width: '2px', background: 'var(--color-border)', borderRadius: '2px' }} />
+                 <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: 'var(--color-parchment-text)' }}>{t.title}</div>
+                    <div style={{ fontSize: '12px', opacity: 0.6 }}>by {t.username}</div>
+                 </div>
+               </div>
+             ))}
+             <button 
+               onClick={onReply}
+               style={{ 
+                 width: '100%', padding: '10px', borderRadius: '8px', border: '1.5px dashed var(--color-border)',
+                 background: 'none', cursor: 'pointer', color: 'var(--color-parchment-text)', fontSize: '13px', fontWeight: '700',
+                 marginTop: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+               }}
+             >
+               <Plus size={14} /> Continue this tale
+             </button>
+          </div>
+        )}
+
+        {/* Comments Section */}
         {commentsOpen && fullStory && (
-          <div style={{ background: 'rgba(0,0,0,0.03)', padding: '20px', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-            <div style={{ maxHeight: '150px', overflowY: 'auto', marginBottom: '16px' }}>
+          <div style={{ background: 'rgba(0,0,0,0.03)', padding: '24px', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+            <h4 style={{ fontSize: '12px', fontWeight: '800', textTransform: 'uppercase', opacity: 0.4, margin: '0 0 16px 0' }}>Reflections</h4>
+            <div style={{ maxHeight: '200px', overflowY: 'auto', marginBottom: '16px' }}>
               {fullStory.comments?.map(c => (
-                <div key={c.id} style={{ marginBottom: '12px', fontSize: '13px' }}>
-                  <strong>{c.username}:</strong> {c.content}
+                <div key={c.id} style={{ marginBottom: '16px', fontSize: '13px' }}>
+                  <div style={{ fontWeight: '700', marginBottom: '2px' }}>{c.username}</div>
+                  <div style={{ opacity: 0.8 }}>{c.content}</div>
                 </div>
               ))}
-            </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <input 
-                placeholder="Say something..." 
-                className="parchment-card"
-                style={{ flex: 1, border: 'none', borderBottom: '1px solid #ccc', padding: '4px', outline: 'none', fontSize: '13px' }}
-                value={commentInput}
-                onChange={e => setCommentInput(e.target.value)}
-              />
+              {fullStory.comments?.length === 0 && <div style={{ opacity: 0.5, fontStyle: 'italic', fontSize: '13px' }}>No reflections yet.</div>}
             </div>
           </div>
         )}

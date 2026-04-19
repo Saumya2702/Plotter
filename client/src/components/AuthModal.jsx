@@ -18,7 +18,7 @@ export default function AuthModal({ onClose }) {
       if (error) {
         toast.error(error.message);
       } else {
-        toast.success("Account created! You are now logged in.");
+        toast.success("Account created! Check your email if verification is required.");
         onClose();
       }
     } else {
@@ -36,51 +36,74 @@ export default function AuthModal({ onClose }) {
   return (
     <div style={{
       position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-      background: 'rgba(0,0,0,0.7)', zIndex: 3000,
-      display: 'flex', alignItems: 'center', justifyContent: 'center'
+      background: 'rgba(0,0,0,0.6)', zIndex: 3000,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      backdropFilter: 'blur(4px)'
     }}>
-      <div style={{
-        background: 'var(--color-accent)', color: 'var(--color-bg)', borderRadius: '16px',
-        width: '100%', maxWidth: '400px', padding: '24px', position: 'relative'
+      <div className="animate-fade-in" style={{
+        background: 'var(--color-card-bg)', color: 'var(--color-text)', borderRadius: '24px',
+        width: '100%', maxWidth: '400px', padding: '40px', position: 'relative',
+        boxShadow: '0 20px 50px rgba(0,0,0,0.3)', border: '1px solid var(--color-border)'
       }}>
         <button 
           onClick={onClose} 
-          style={{ position: 'absolute', top: '16px', right: '16px', background: 'none', border: 'none', cursor: 'pointer', color: '#666' }}
+          style={{ 
+            position: 'absolute', top: '24px', right: '24px', background: 'none', 
+            border: 'none', cursor: 'pointer', color: 'var(--color-text)', opacity: 0.5 
+          }}
         >
-          <X />
+          <X size={20} />
         </button>
 
-        <h2 style={{ margin: '0 0 20px 0' }}>{mode === 'signin' ? 'Sign In' : 'Create Account'}</h2>
+        <h2 style={{ margin: '0 0 8px 0', fontSize: '28px', fontWeight: '800', letterSpacing: '-0.5px' }}>
+          {mode === 'signin' ? 'Sign In' : 'Join Plotter'}
+        </h2>
+        <p style={{ margin: '0 0 32px 0', opacity: 0.6, fontSize: '14px' }}>
+          {mode === 'signin' ? 'Continue your journey' : 'Start chronicling your stories'}
+        </p>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>Email</label>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', opacity: 0.8 }}>Email</label>
             <input 
               type="email" required value={email} onChange={e => setEmail(e.target.value)}
-              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc', fontSize: '15px', background: 'var(--color-accent)', color: 'inherit' }}
+              placeholder="name@example.com"
+              style={{ 
+                width: '100%', padding: '12px 16px', borderRadius: '12px', 
+                border: '1px solid var(--color-border)', fontSize: '15px', 
+                background: 'rgba(0,0,0,0.02)', color: 'var(--color-text)',
+                outline: 'none'
+              }}
             />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, marginBottom: '6px' }}>Password</label>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', opacity: 0.8 }}>Password</label>
             <input 
               type="password" required value={password} onChange={e => setPassword(e.target.value)}
-              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc', fontSize: '15px', background: 'var(--color-accent)', color: 'inherit' }}
+              placeholder="••••••••"
+              style={{ 
+                width: '100%', padding: '12px 16px', borderRadius: '12px', 
+                border: '1px solid var(--color-border)', fontSize: '15px', 
+                background: 'rgba(0,0,0,0.02)', color: 'var(--color-text)',
+                outline: 'none'
+              }}
             />
           </div>
           
           <button type="submit" disabled={loading} style={{
-            background: 'var(--color-primary)', color: 'var(--color-accent)', border: 'none', padding: '12px',
-            borderRadius: '8px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginTop: '8px'
+            background: 'var(--color-primary)', color: '#fff', border: 'none', padding: '14px',
+            borderRadius: '12px', fontWeight: '800', fontSize: '16px', cursor: 'pointer', 
+            marginTop: '12px', boxShadow: '0 4px 15px rgba(232,117,74,0.3)'
           }}>
-            {loading ? 'Processing...' : (mode === 'signin' ? 'Sign In' : 'Sign Up')}
+            {loading ? 'Processing...' : (mode === 'signin' ? 'Sign In' : 'Create Account')}
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '14px' }}>
+        <div style={{ textAlign: 'center', marginTop: '32px', fontSize: '14px', opacity: 0.8 }}>
           {mode === 'signin' ? (
-            <span>Don't have an account? <a href="#" onClick={(e) => { e.preventDefault(); setMode('signup'); }} style={{ color: 'var(--color-primary)', fontWeight: 600 }}>Sign up</a></span>
+            <span>New here? <a href="#" onClick={(e) => { e.preventDefault(); setMode('signup'); }} style={{ color: 'var(--color-primary)', fontWeight: '700', textDecoration: 'none' }}>Create an account</a></span>
           ) : (
-            <span>Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); setMode('signin'); }} style={{ color: 'var(--color-primary)', fontWeight: 600 }}>Sign in</a></span>
+            <span>Already a member? <a href="#" onClick={(e) => { e.preventDefault(); setMode('signin'); }} style={{ color: 'var(--color-primary)', fontWeight: '700', textDecoration: 'none' }}>Sign in here</a></span>
           )}
         </div>
       </div>

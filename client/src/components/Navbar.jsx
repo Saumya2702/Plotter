@@ -1,136 +1,124 @@
-import React, { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { Search, User, LogIn, LogOut } from 'lucide-react';
-import toast from 'react-hot-toast';
-import axios from 'axios';
+import { Sun, Moon, Menu, User, LogOut, X } from 'lucide-react';
 import AuthModal from './AuthModal';
 
-export default function Navbar({ session }) {
+export default function Navbar({ session, theme, setTheme }) {
   const [showAuth, setShowAuth] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searching, setSearching] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    
-    setSearching(true);
-    try {
-      const res = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`);
-      if (res.data && res.data.length > 0) {
-        const { lat, lon, display_name } = res.data[0];
-        if (location.pathname !== '/') {
-          navigate(`/?lat=${lat}&lng=${lon}`);
-        } else {
-          window.dispatchEvent(new CustomEvent('map-fly-to', { 
-            detail: { lat: parseFloat(lat), lng: parseFloat(lon), name: display_name } 
-          }));
-        }
-        setSearchQuery('');
-      } else {
-        toast.error('Location not found');
-      }
-    } catch (err) {
-      toast.error('Search failed');
-    } finally {
-      setSearching(false);
-    }
+  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setMenuOpen(false);
+    navigate('/');
   };
-
-  const navPills = [
-    { label: 'Explore', path: '/' },
-    { label: 'Nearby', path: '/?filter=nearby' },
-    { label: 'Trending', path: '/?filter=trending' }
-  ];
 
   return (
     <>
-      <nav className="glass-panel" style={{
-        position: 'fixed', top: 0, left: 0, right: 0,
-        height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 32px', zIndex: 2000, borderTop: 'none', borderLeft: 'none', borderRight: 'none'
+      <nav style={{
+        position: 'fixed', top: 0, left: 0, right: 0, height: '72px',
+        background: 'var(--color-navbar-bg)', backdropFilter: 'blur(10px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 32px', zIndex: 2000, borderBottom: '1px solid var(--color-border)'
       }}>
-        {/* Left: Logo */}
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--color-primary)', boxShadow: '0 0 10px var(--color-primary)' }}></div>
-          <span style={{ fontSize: '20px', fontWeight: '700', letterSpacing: '-0.5px', color: '#fff' }}>Plotter</span>
+        
+        {/* Left: Branding */}
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
+           <div style={{ 
+             width: '12px', height: '12px', borderRadius: '50%', 
+             background: 'var(--color-primary)', boxShadow: '0 0 12px var(--color-primary)' 
+           }} />
+           <span style={{ 
+             fontSize: '22px', fontWeight: '800', letterSpacing: '-0.5px', 
+             color: 'var(--color-text)', display: 'flex', alignItems: 'center' 
+           }}>
+             Plotter
+           </span>
         </Link>
 
-        {/* Center: Pills */}
-        <div style={{ display: 'flex', gap: '8px' }}>
-          {navPills.map(pill => {
-            const isActive = location.pathname === pill.path || (pill.path !== '/' && location.search.includes(pill.path.split('?')[1]));
-            return (
-              <Link 
-                key={pill.label} 
-                to={pill.path} 
-                className={`glass-pill ${isActive ? 'active' : ''}`}
-                style={{ fontSize: '14px', fontWeight: '600' }}
-              >
-                {pill.label}
-              </Link>
-            );
-          })}
+        {/* Center: Heading */}
+        <div style={{ 
+          position: 'absolute', left: '50%', transform: 'translateX(-50%)',
+          color: 'var(--color-text)', opacity: 0.8, fontSize: '15px', 
+          fontWeight: '500', letterSpacing: '0.2px', pointerEvents: 'none'
+        }}>
+          Seek the stories marked upon the map
         </div>
 
-        {/* Right: Search + Auth */}
+        {/* Right: Actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <form onSubmit={handleSearch} style={{ position: 'relative' }}>
-            <Search 
-              size={18} 
-              style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} 
-            />
-            <input
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search place..."
-              disabled={searching}
-              style={{
-                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '20px', padding: '8px 16px 8px 38px', color: '#fff', fontSize: '14px',
-                width: '180px', outline: 'none', transition: 'width 0.3s'
-              }}
-              onFocus={e => e.target.style.width = '240px'}
-              onBlur={e => e.target.style.width = '180px'}
-            />
-          </form>
+          
+          <button onClick={toggleTheme} style={{ 
+            background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text)',
+            padding: '8px', borderRadius: '50%', display: 'flex', alignItems: 'center'
+          }}>
+            {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
 
-          {session ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <Link to={`/users/${session.user.id}`} style={{
-                width: '36px', height: '36px', borderRadius: '50%', overflow: 'hidden', 
-                border: '2px solid var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center'
-              }}>
-                <img 
-                  src={session.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/notionists/svg?seed=${session.user.id}`} 
-                  alt="Avatar" 
-                />
-              </Link>
-              <button
-                onClick={() => supabase.auth.signOut()}
-                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}
-                title="Log Out"
-              >
-                <LogOut size={20} />
-              </button>
-            </div>
-          ) : (
+          {!session && (
             <button 
               onClick={() => setShowAuth(true)}
               style={{
                 background: 'var(--color-primary)', color: '#fff', border: 'none',
                 padding: '8px 20px', borderRadius: '20px', fontWeight: '700',
-                cursor: 'pointer', transition: 'all 0.2s'
+                fontSize: '14px', cursor: 'pointer'
               }}
-              onMouseOver={e => e.target.style.background = 'var(--color-primary-hover)'}
-              onMouseOut={e => e.target.style.background = 'var(--color-primary)'}
             >
               Sign In
             </button>
           )}
+
+          <div style={{ position: 'relative' }}>
+            <button 
+              onClick={() => setMenuOpen(!menuOpen)}
+              style={{ 
+                background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text)',
+                padding: '8px', display: 'flex', alignItems: 'center' 
+              }}
+            >
+              <Menu size={24} />
+            </button>
+
+            {menuOpen && (
+              <div 
+                className="animate-fade-in"
+                style={{
+                  position: 'absolute', top: '50px', right: 0, width: '200px',
+                  background: 'var(--color-card-bg)', border: '1px solid var(--color-border)',
+                  borderRadius: '12px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+                  padding: '8px', overflow: 'hidden'
+                }}
+              >
+                {session ? (
+                  <>
+                    <Link to={`/users/${session.user.id}`} onClick={() => setMenuOpen(false)} style={{
+                      display: 'flex', alignItems: 'center', gap: '10px', padding: '12px',
+                      textDecoration: 'none', color: 'var(--color-text)', borderRadius: '8px',
+                      transition: 'background 0.2s'
+                    }} onMouseOver={e => e.currentTarget.style.background = 'var(--color-glass)'} onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
+                      <User size={18} /> <span>Your Profile</span>
+                    </Link>
+                    <div style={{ height: '1px', background: 'var(--color-border)', margin: '4px 0' }} />
+                    <button onClick={handleLogout} style={{
+                      width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '12px',
+                      background: 'none', border: 'none', color: '#E53E3E', borderRadius: '8px',
+                      cursor: 'pointer', textAlign: 'left', fontWeight: '500'
+                    }} onMouseOver={e => e.currentTarget.style.background = 'rgba(229, 62, 62, 0.1)'} onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
+                      <LogOut size={18} /> <span>Sign Out</span>
+                    </button>
+                  </>
+                ) : (
+                  <div style={{ padding: '12px', textAlign: 'center', opacity: 0.6, fontSize: '13px' }}>
+                    Sign in to see more
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </nav>
 
@@ -138,3 +126,4 @@ export default function Navbar({ session }) {
     </>
   );
 }
+

@@ -28,10 +28,7 @@ export default function Navbar({ session, theme, setTheme }) {
         
         {/* Left: Branding */}
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '12px', textDecoration: 'none' }}>
-           <div style={{ 
-             width: '12px', height: '12px', borderRadius: '50%', 
-             background: 'var(--color-primary)', boxShadow: '0 0 12px var(--color-primary)' 
-           }} />
+           <img src="/logo.png" alt="Plotter Logo" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
            <span style={{ 
              fontSize: '22px', fontWeight: '800', letterSpacing: '-0.5px', 
              color: 'var(--color-text)', display: 'flex', alignItems: 'center' 

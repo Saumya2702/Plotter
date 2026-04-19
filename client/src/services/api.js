@@ -57,8 +57,8 @@ export const postReaction = async (storyId, type, token) => {
 };
 
 // Comments
-export const postComment = async (storyId, content, token) => {
-  const response = await api.post(`/stories/${storyId}/comments`, { content }, {
+export const postComment = async (storyId, content, token, parentCommentId = null) => {
+  const response = await api.post(`/stories/${storyId}/comments`, { content, parentCommentId }, {
     headers: { Authorization: `Bearer ${token}` }
   });
   return response.data;

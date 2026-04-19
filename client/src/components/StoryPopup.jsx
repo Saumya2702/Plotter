@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { getStoryDetails, postReaction, postComment } from '../services/api';
 import { X, Heart, MessageCircle, Share, GitBranch, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -9,6 +9,13 @@ export default function StoryPopup({ story, onClose, session, onReply, setShowAu
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentInput, setCommentInput] = useState('');
   const [loading, setLoading] = useState(true);
+  const [replyingTo, setReplyingTo] = useState(null);
+  const commentInputRef = useRef(null);
+
+  const startReply = (comment) => {
+    setReplyingTo(comment);
+    commentInputRef.current?.focus();
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -17,6 +24,24 @@ export default function StoryPopup({ story, onClose, session, onReply, setShowAu
       setLoading(false);
     }).catch(() => setLoading(false));
   }, [story.id, session]);
+
+  const handleCommentSubmit = async () => {
+    if (!commentInput.trim()) return;
+    try {
+      const parentId = replyingTo ? replyingTo.id : null;
+      const newComment = await postComment(story.id, commentInput, session.access_token, parentId);
+      
+      setFullStory(prev => ({
+        ...prev,
+        comments: [...(prev.comments || []), newComment]
+      }));
+      setCommentInput('');
+      setReplyingTo(null);
+      toast.success("Reflection added");
+    } catch (err) {
+      toast.error("Failed to add reflection");
+    }
+  };
 
   const handleReact = async (type) => {
     if (!session) return setShowAuth(true);
@@ -45,6 +70,22 @@ export default function StoryPopup({ story, onClose, session, onReply, setShowAu
 
   const s = fullStory ? fullStory.story : story;
 
+  // Build recursive structure for comments
+  const commentTree = useMemo(() => {
+    if (!fullStory?.comments) return [];
+    const map = {};
+    fullStory.comments.forEach(c => map[c.id] = { ...c, replies: [] });
+    const root = [];
+    fullStory.comments.forEach(c => {
+      if (c.parent_id && map[c.parent_id]) {
+        map[c.parent_id].replies.push(map[c.id]);
+      } else {
+        root.push(map[c.id]);
+      }
+    });
+    return root;
+  }, [fullStory?.comments]);
+
   // Responsive Styles Hook
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
@@ -61,6 +102,28 @@ export default function StoryPopup({ story, onClose, session, onReply, setShowAu
     width: '320px', maxHeight: 'calc(100vh - 120px)',
     overflowY: 'auto', borderRadius: '20px'
   };
+
+  const CommentItem = ({ comment, depth = 0 }) => (
+    <div style={{ marginBottom: '16px', marginLeft: depth > 0 ? '20px' : '0' }}>
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+         <img 
+            src={comment.avatar_url || `https://api.dicebear.com/7.x/notionists/svg?seed=${comment.username}`} 
+            style={{ width: '18px', height: '18px', borderRadius: '50%' }} alt="" 
+         />
+         <div style={{ flex: 1 }}>
+           <div style={{ fontWeight: '800', fontSize: '11px', marginBottom: '2px' }}>{comment.username}</div>
+           <div style={{ opacity: 0.8, fontSize: '13px', lineHeight: '1.4' }}>{comment.content}</div>
+           <button 
+             onClick={() => startReply(comment)}
+             style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontSize: '10px', fontWeight: '800', cursor: 'pointer', padding: '4px 0', opacity: 0.7 }}
+           >
+             Reply
+           </button>
+         </div>
+      </div>
+      {comment.replies?.map(r => <CommentItem key={r.id} comment={r} depth={depth + 1} />)}
+    </div>
+  );
 
   return (
     <div className="animate-fade-in" style={{
@@ -204,17 +267,46 @@ export default function StoryPopup({ story, onClose, session, onReply, setShowAu
         {commentsOpen && (
           <div className="animate-fade-in" style={{ background: 'rgba(0,0,0,0.02)', padding: '20px', borderTop: '1px solid var(--color-border)' }}>
             <h4 style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', opacity: 0.4, margin: '0 0 16px 0' }}>Reflections</h4>
+            
+            {/* Comment Input */}
+            <div style={{ marginBottom: '20px' }}>
+              {replyingTo && (
+                <div style={{ fontSize: '11px', marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ opacity: 0.6 }}>Replying to <strong>@{replyingTo.username}</strong></span>
+                  <button onClick={() => setReplyingTo(null)} style={{ background: 'none', border: 'none', color: 'var(--color-primary)', cursor: 'pointer', fontSize: '11px' }}>Cancel</button>
+                </div>
+              )}
+              <textarea
+                ref={commentInputRef}
+                value={commentInput}
+                onChange={e => setCommentInput(e.target.value)}
+                placeholder={replyingTo ? `Write your reply...` : "Add your whisper..."}
+                style={{ 
+                  width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid var(--color-border)',
+                  background: 'var(--color-card-bg)', color: 'var(--color-text)', fontSize: '13px',
+                  resize: 'none', marginBottom: '8px', outline: 'none'
+                }}
+                rows={2}
+              />
+              <button
+                onClick={handleCommentSubmit}
+                disabled={!commentInput.trim()}
+                style={{ 
+                  width: '100%', padding: '10px', borderRadius: '10px', background: 'var(--color-primary)',
+                  color: '#fff', border: 'none', fontWeight: '800', fontSize: '12px', cursor: 'pointer',
+                  opacity: commentInput.trim() ? 1 : 0.5
+                }}
+              >
+                {replyingTo ? 'Post Reply' : 'Share Reflection'}
+              </button>
+            </div>
+
             {loading ? (
               <div style={{ fontSize: '12px', opacity: 0.5 }}>Gathering whispers...</div>
             ) : (
-              <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                {fullStory?.comments?.map(c => (
-                  <div key={c.id} style={{ marginBottom: '16px', fontSize: '13px' }}>
-                    <div style={{ fontWeight: '800', marginBottom: '2px', fontSize: '11px' }}>{c.username}</div>
-                    <div style={{ opacity: 0.8 }}>{c.content}</div>
-                  </div>
-                ))}
-                {fullStory?.comments?.length === 0 && <div style={{ opacity: 0.5, fontStyle: 'italic', fontSize: '13px' }}>No reflections yet.</div>}
+              <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                {commentTree.map(c => <CommentItem key={c.id} comment={c} />)}
+                {commentTree.length === 0 && <div style={{ opacity: 0.5, fontStyle: 'italic', fontSize: '13px' }}>No reflections yet.</div>}
               </div>
             )}
           </div>

@@ -3,7 +3,7 @@ const commentsService = require('../services/comments.service');
 async function createComment(req, res, next) {
   try {
     const { storyId } = req.params;
-    const { content } = req.body;
+    const { content, parentCommentId } = req.body;
     const userId = req.user.id;
 
     if (!content || !content.trim()) {
@@ -17,7 +17,8 @@ async function createComment(req, res, next) {
     const comment = await commentsService.createComment({
       userId,
       storyId: parseInt(storyId, 10),
-      content: content.trim()
+      content: content.trim(),
+      parentId: parentCommentId ? parseInt(parentCommentId, 10) : null
     });
 
     res.status(201).json(comment);

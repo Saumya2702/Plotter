@@ -14,14 +14,18 @@ export const getStoryDetails = async (id) => {
   return response.data;
 };
 
-export const createStory = async (storyData) => {
+export const createStory = async (storyData, token) => {
   // storyData: { title, content, lat, lng, imageUrl? }
-  const response = await api.post('/stories', storyData);
+  const response = await api.post('/stories', storyData, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
   return response.data;
 };
 
-export const addReply = async (storyId, content) => {
-  const response = await api.post(`/stories/${storyId}/reply`, { content });
+export const addReply = async (storyId, content, token) => {
+  const response = await api.post(`/stories/${storyId}/reply`, { content }, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
   return response.data;
 };
 

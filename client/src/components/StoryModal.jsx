@@ -33,7 +33,7 @@ export default function StoryModal({ location, session, onClose, parentId = null
         lat: location.lat,
         lng: location.lng,
         parentId
-      });
+      }, session.access_token);
       toast.success("Story successfully published!");
       onClose(true); // Signal success
     } catch (err) {

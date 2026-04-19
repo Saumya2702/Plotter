@@ -55,7 +55,7 @@ function MapEvents({ fetchStories, dropMode, onMapClick, setLocationName }) {
   return null;
 }
 
-export default function MapView({ session, theme }) {
+export default function MapView({ session, theme, setShowAuth }) {
   const [stories, setStories] = useState([]);
   const [dropMode, setDropMode] = useState(false);
   const [newPinLoc, setNewPinLoc] = useState(null);
@@ -102,6 +102,7 @@ export default function MapView({ session, theme }) {
   };
 
   const handleReplyInit = (story) => {
+    if (!session) return setShowAuth(true);
     setParentId(story.id);
     setDropMode(true);
     setActiveStory(null);
@@ -113,15 +114,15 @@ export default function MapView({ session, theme }) {
       
       {/* Top Location Badge */}
       <div className="animate-fade-in" style={{
-        position: 'absolute', top: '90px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000,
-        display: 'flex', alignItems: 'center', gap: '8px', pointerEvents: 'none'
+        position: 'absolute', top: '88px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000,
+        display: 'flex', alignItems: 'center', gap: '8px', pointerEvents: 'none', width: 'max-content'
       }}>
         <div className="glass-panel" style={{
-          padding: '10px 24px', borderRadius: '30px', display: 'flex', alignItems: 'center', gap: '10px',
+          padding: '8px 16px', borderRadius: '30px', display: 'flex', alignItems: 'center', gap: '8px',
           background: 'var(--color-navbar-bg)', border: '1px solid var(--color-border)'
         }}>
-          <Navigation size={14} style={{ color: 'var(--color-primary)' }} />
-          <span style={{ fontSize: '13px', fontWeight: '800', letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text)' }}>
+          <Navigation size={12} style={{ color: 'var(--color-primary)' }} />
+          <span style={{ fontSize: '11px', fontWeight: '800', letterSpacing: '0.5px', textTransform: 'uppercase', color: 'var(--color-text)' }}>
             {locationName}
           </span>
         </div>
@@ -131,7 +132,7 @@ export default function MapView({ session, theme }) {
       {!loading && stories.length === 0 && (
         <div style={{
           position: 'absolute', bottom: '40px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000,
-          color: 'var(--color-text)', opacity: 0.4, fontSize: '14px', fontWeight: '500', pointerEvents: 'none'
+          color: 'var(--color-text)', opacity: 0.4, fontSize: '13px', fontWeight: '500', pointerEvents: 'none', width: 'max-content'
         }}>
           No stories here yet — be the first to drop one
         </div>
@@ -193,22 +194,22 @@ export default function MapView({ session, theme }) {
       {/* FAB: Drop a story */}
       <button
         onClick={() => {
-          if (!session) return toast.error("Sign in to drop a story");
+          if (!session) return setShowAuth(true);
           setParentId(null);
           setDropMode(!dropMode);
           if (!dropMode) toast.success("Select a spot on the map", { icon: '📍' });
         }}
         className="animate-fade-in"
         style={{
-          position: 'absolute', bottom: '40px', right: '40px', zIndex: 1000,
-          width: '64px', height: '64px', borderRadius: '50%', background: 'var(--color-primary)',
+          position: 'absolute', bottom: '32px', right: '32px', zIndex: 1000,
+          width: '56px', height: '56px', borderRadius: '50%', background: 'var(--color-primary)',
           color: '#fff', border: 'none', cursor: 'pointer', boxShadow: '0 8px 32px rgba(232, 117, 74, 0.4)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s'
         }}
         onMouseOver={e => e.currentTarget.style.transform = 'scale(1.1) rotate(90deg)'}
         onMouseOut={e => e.currentTarget.style.transform = 'scale(1) rotate(0deg)'}
       >
-        <Plus size={32} />
+        <Plus size={28} />
       </button>
 
       {activeStory && (
@@ -216,6 +217,7 @@ export default function MapView({ session, theme }) {
           story={activeStory}
           onClose={() => setActiveStory(null)}
           session={session}
+          setShowAuth={setShowAuth}
           onReply={() => handleReplyInit(activeStory)}
         />
       )}
@@ -233,6 +235,9 @@ export default function MapView({ session, theme }) {
           }}
         />
       )}
+    </div>
+  );
+}
     </div>
   );
 }

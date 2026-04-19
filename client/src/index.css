@@ -95,23 +95,46 @@ body {
   display: none !important;
 }
 
-/* Pin Markers */
+/* Category markers */
 .pin-marker {
   border-radius: 50%;
   border: 2px solid #fff;
-  box-shadow: 0 0 10px rgba(0,0,0,0.3);
-  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  transition: transform 0.2s;
+  cursor: pointer;
 }
 
 .pin-marker:hover {
-  transform: scale(1.25);
-  z-index: 1000 !important;
+  transform: scale(1.2);
+  z-index: 1000;
 }
 
 .pin-memory { background-color: var(--color-memory); }
 .pin-legend { background-color: var(--color-legend); }
-.pin-myth { background-color: var(--color-myth); }
-.pin-news { background-color: var(--color-news); }
+.pin-myth   { background-color: var(--color-myth); }
+.pin-news   { background-color: var(--color-news); }
+
+/* Visibility Utilities */
+@media (max-width: 768px) {
+  .nav-center-heading {
+    display: none !important;
+  }
+}
+
+/* Fix StoryModal select dropdown readability */
+select.parchment-select, 
+.parchment-card select {
+  background-color: #fff !important;
+  color: #2A1F14 !important;
+  border: 1.5px solid rgba(0,0,0,0.1);
+  appearance: auto;
+  padding: 8px;
+}
+
+.parchment-card select option {
+  background-color: #fff;
+  color: #2A1F14;
+}
 
 /* Custom Animations */
 @keyframes fadeInSlide {

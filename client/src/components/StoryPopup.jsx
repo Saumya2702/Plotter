@@ -3,7 +3,7 @@ import { getStoryDetails, postReaction, postComment } from '../services/api';
 import { X, Heart, MessageCircle, Share, GitBranch, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-export default function StoryPopup({ story, onClose, session, onReply }) {
+export default function StoryPopup({ story, onClose, session, onReply, setShowAuth }) {
   const [fullStory, setFullStory] = useState(null);
   const [threadOpen, setThreadOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -19,7 +19,7 @@ export default function StoryPopup({ story, onClose, session, onReply }) {
   }, [story.id, session]);
 
   const handleReact = async (type) => {
-    if (!session) return toast.error("Please sign in to react");
+    if (!session) return setShowAuth(true);
     const hasTypeKey = `user_has_${type}`;
     const typeKey = `${type}_count`;
 
@@ -45,11 +45,27 @@ export default function StoryPopup({ story, onClose, session, onReply }) {
 
   const s = fullStory ? fullStory.story : story;
 
+  // Responsive Styles Hook
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const containerStyles = isMobile ? {
+    position: 'fixed', bottom: '20px', left: '20px', right: '20px', zIndex: 1100,
+    maxHeight: '70vh', overflowY: 'auto', borderRadius: '24px'
+  } : {
+    position: 'absolute', top: '90px', left: '30px', zIndex: 1100,
+    width: '320px', maxHeight: 'calc(100vh - 120px)',
+    overflowY: 'auto', borderRadius: '20px'
+  };
+
   return (
     <div className="animate-fade-in" style={{
-      position: 'absolute', top: '90px', left: '30px', zIndex: 1100,
-      width: '320px', maxHeight: 'calc(100vh - 120px)',
-      overflowY: 'auto', borderRadius: '20px', overflowX: 'hidden',
+      ...containerStyles,
+      overflowX: 'hidden',
       boxShadow: '0 30px 60px rgba(0,0,0,0.4)', pointerEvents: 'auto',
       background: 'var(--color-card-bg)', color: 'var(--color-text)',
       border: '1px solid var(--color-border)', backdropFilter: 'blur(8px)'
@@ -62,10 +78,10 @@ export default function StoryPopup({ story, onClose, session, onReply }) {
           boxShadow: `0 0 10px var(--color-${s.category})`
         }} />
         
-        <div style={{ padding: '24px' }}>
+        <div style={{ padding: isMobile ? '20px' : '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
             <span style={{ 
-              fontSize: '11px', fontWeight: '800', letterSpacing: '1px', 
+              fontSize: '10px', fontWeight: '800', letterSpacing: '1px', 
               textTransform: 'uppercase', color: `var(--color-${s.category})` 
             }}>
               {s.category}
@@ -76,24 +92,24 @@ export default function StoryPopup({ story, onClose, session, onReply }) {
           </div>
 
           <h3 style={{ 
-            fontFamily: 'var(--font-story)', fontSize: '24px', marginBottom: '16px', lineHeight: '1.2',
+            fontFamily: 'var(--font-story)', fontSize: isMobile ? '22px' : '24px', marginBottom: '12px', lineHeight: '1.2',
             fontWeight: '700'
           }}>
             {s.title}
           </h3>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
             <img 
               src={s.avatar_url || `https://api.dicebear.com/7.x/notionists/svg?seed=${s.username}`} 
-              style={{ width: '24px', height: '24px', borderRadius: '50%', border: '1px solid var(--color-border)' }} alt="" 
+              style={{ width: '22px', height: '22px', borderRadius: '50%', border: '1px solid var(--color-border)' }} alt="" 
             />
-            <span style={{ fontSize: '13px', opacity: 0.6 }}>
+            <span style={{ fontSize: '12px', opacity: 0.6 }}>
               by <strong>{s.username || 'Anonymous'}</strong>
             </span>
           </div>
 
           <div style={{ 
-            fontFamily: 'var(--font-story)', marginBottom: '20px', fontSize: '16px', lineHeight: '1.6', opacity: 0.9 
+            fontFamily: 'var(--font-story)', marginBottom: '20px', fontSize: isMobile ? '15px' : '16px', lineHeight: '1.6', opacity: 0.9 
           }}>
             {s.content}
           </div>
@@ -105,17 +121,29 @@ export default function StoryPopup({ story, onClose, session, onReply }) {
           <div style={{ display: 'flex', gap: '20px', borderTop: '1px solid var(--color-border)', paddingTop: '16px' }}>
             <button onClick={() => handleReact('like')} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'inherit' }}>
               <Heart size={18} fill={s.user_has_like ? "#E53E3E" : "transparent"} color={s.user_has_like ? "#E53E3E" : "currentColor"} />
-              <span style={{ fontSize: '14px', fontWeight: '700' }}>{s.like_count || 0}</span>
+              <span style={{ fontSize: '13px', fontWeight: '700' }}>{s.like_count || 0}</span>
             </button>
 
-            <button onClick={() => { setCommentsOpen(!commentsOpen); setThreadOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'inherit' }}>
+            <button onClick={() => { 
+                if(!session) return setShowAuth(true);
+                setCommentsOpen(!commentsOpen); 
+                setThreadOpen(false); 
+              }} 
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'inherit' }}
+            >
               <MessageCircle size={18} color="currentColor" />
-              <span style={{ fontSize: '14px', fontWeight: '700' }}>{fullStory?.comments?.length || 0}</span>
+              <span style={{ fontSize: '13px', fontWeight: '700' }}>{fullStory?.comments?.length || 0}</span>
             </button>
 
-            <button onClick={() => { setThreadOpen(!threadOpen); setCommentsOpen(false); }} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'inherit' }}>
+            <button onClick={() => { 
+                if(!session) return setShowAuth(true);
+                setThreadOpen(!threadOpen); 
+                setCommentsOpen(false); 
+              }} 
+              style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'inherit' }}
+            >
               <GitBranch size={18} color="currentColor" />
-              <span style={{ fontSize: '14px', fontWeight: '700' }}>{fullStory?.thread?.length || 0}</span>
+              <span style={{ fontSize: '13px', fontWeight: '700' }}>{fullStory?.thread?.length || 0}</span>
             </button>
 
             <button onClick={() => {
@@ -129,8 +157,8 @@ export default function StoryPopup({ story, onClose, session, onReply }) {
 
         {/* Continuations / Threads */}
         {threadOpen && (
-          <div className="animate-fade-in" style={{ padding: '0 24px 24px', background: 'rgba(0,0,0,0.02)', borderTop: '1px solid var(--color-border)' }}>
-             <h4 style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', opacity: 0.4, margin: '16px 0 12px 0' }}>Continuations</h4>
+          <div className="animate-fade-in" style={{ padding: '0 20px 20px', background: 'rgba(0,0,0,0.02)', borderTop: '1px solid var(--color-border)' }}>
+             <h4 style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', opacity: 0.4, margin: '16px 0 10px 0' }}>Continuations</h4>
              {loading ? (
                <div style={{ fontSize: '12px', opacity: 0.5 }}>Loading tales...</div>
              ) : (
@@ -150,10 +178,8 @@ export default function StoryPopup({ story, onClose, session, onReply }) {
                    style={{ 
                      width: '100%', padding: '12px', borderRadius: '12px', border: '1.5px dashed var(--color-border)',
                      background: 'none', cursor: 'pointer', color: 'var(--color-primary)', fontSize: '13px', fontWeight: '800',
-                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.2s'
+                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
                    }}
-                   onMouseOver={e => e.currentTarget.style.background = 'rgba(232,117,74,0.05)'}
-                   onMouseOut={e => e.currentTarget.style.background = 'none'}
                  >
                    <Plus size={16} /> Continue this tale
                  </button>
@@ -164,15 +190,15 @@ export default function StoryPopup({ story, onClose, session, onReply }) {
 
         {/* Comments Section */}
         {commentsOpen && (
-          <div className="animate-fade-in" style={{ background: 'rgba(0,0,0,0.02)', padding: '24px', borderTop: '1px solid var(--color-border)' }}>
-            <h4 style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', opacity: 0.4, margin: '0 0 16px 0' }}>Reflections</h4>
+          <div className="animate-fade-in" style={{ background: 'rgba(0,0,0,0.02)', padding: '20px', borderTop: '1px solid var(--color-border)' }}>
+            <h4 style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', opacity: 0.4, margin: '0 0 16px 0' }}>Reflections</h4>
             {loading ? (
               <div style={{ fontSize: '12px', opacity: 0.5 }}>Gathering whispers...</div>
             ) : (
               <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
                 {fullStory?.comments?.map(c => (
-                  <div key={c.id} style={{ marginBottom: '16px', fontSize: '14px' }}>
-                    <div style={{ fontWeight: '800', marginBottom: '2px', fontSize: '12px' }}>{c.username}</div>
+                  <div key={c.id} style={{ marginBottom: '16px', fontSize: '13px' }}>
+                    <div style={{ fontWeight: '800', marginBottom: '2px', fontSize: '11px' }}>{c.username}</div>
                     <div style={{ opacity: 0.8 }}>{c.content}</div>
                   </div>
                 ))}

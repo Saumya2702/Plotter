@@ -10,7 +10,6 @@ import Profile from './pages/Profile';
 
 export default function App() {
   const [session, setSession] = useState(null);
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -26,17 +25,12 @@ export default function App() {
     return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    document.body.className = theme;
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
   return (
     <Router>
-      <Toaster position="top-center" toastOptions={{ style: { background: theme === 'dark' ? '#333' : '#fff', color: theme === 'dark' ? '#fff' : '#111' } }} />
-      <Navbar session={session} theme={theme} setTheme={setTheme} />
+      <Toaster position="top-center" toastOptions={{ style: { background: '#1A1A2E', color: '#fff', border: '1px solid rgba(255,255,255,0.1)' } }} />
+      <Navbar session={session} />
       <Routes>
-        <Route path="/" element={<MapView session={session} theme={theme} />} />
+        <Route path="/" element={<MapView session={session} />} />
         <Route path="/explore" element={<Explore />} />
         <Route path="/users/:id" element={<Profile />} />
       </Routes>

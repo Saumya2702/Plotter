@@ -1,76 +1,134 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { MapPin, Search, User, LogIn, LogOut, Plus, Sun, Moon } from 'lucide-react';
+import { Search, User, LogIn, LogOut } from 'lucide-react';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 import AuthModal from './AuthModal';
 
-export default function Navbar({ session, theme, setTheme }) {
+export default function Navbar({ session }) {
   const [showAuth, setShowAuth] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searching, setSearching] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const startDropMode = () => {
-    if (!session) {
-      toast.error("Please sign in to drop a story!");
-      return;
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    
+    setSearching(true);
+    try {
+      const res = await axios.get(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`);
+      if (res.data && res.data.length > 0) {
+        const { lat, lon, display_name } = res.data[0];
+        if (location.pathname !== '/') {
+          navigate(`/?lat=${lat}&lng=${lon}`);
+        } else {
+          window.dispatchEvent(new CustomEvent('map-fly-to', { 
+            detail: { lat: parseFloat(lat), lng: parseFloat(lon), name: display_name } 
+          }));
+        }
+        setSearchQuery('');
+      } else {
+        toast.error('Location not found');
+      }
+    } catch (err) {
+      toast.error('Search failed');
+    } finally {
+      setSearching(false);
     }
-    toast.success("Click anywhere on the map to select a location!", { duration: 4000 });
-    window.dispatchEvent(new Event('enter-drop-mode'));
   };
+
+  const navPills = [
+    { label: 'Explore', path: '/' },
+    { label: 'Nearby', path: '/?filter=nearby' },
+    { label: 'Trending', path: '/?filter=trending' }
+  ];
 
   return (
     <>
-      <nav style={{
-        position: 'absolute', top: 0, left: 0, right: 0,
-        height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '0 24px', zIndex: 10, background: theme === 'dark' ? 'rgba(27, 27, 27, 0.4)' : 'rgba(237, 224, 212, 0.7)',
-        backdropFilter: 'blur(12px)', borderBottom: theme === 'dark' ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(0,0,0,0.05)',
-        color: theme === 'dark' ? 'var(--color-accent)' : 'var(--color-bg)'
+      <nav className="glass-panel" style={{
+        position: 'fixed', top: 0, left: 0, right: 0,
+        height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 32px', zIndex: 2000, borderTop: 'none', borderLeft: 'none', borderRight: 'none'
       }}>
-        <Link to="/" style={{ fontSize: '22px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <img src="/logo.png" alt="Plotter Logo" width={40} height={48} style={{ objectFit: 'contain' }} /> Plotter
+        {/* Left: Logo */}
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'var(--color-primary)', boxShadow: '0 0 10px var(--color-primary)' }}></div>
+          <span style={{ fontSize: '20px', fontWeight: '700', letterSpacing: '-0.5px', color: '#fff' }}>Plotter</span>
         </Link>
 
-        <div>
-          <button
-            onClick={startDropMode}
-            style={{
-              background: 'var(--color-memory)', color: '#fff', border: 'none',
-              padding: '8px 20px', borderRadius: '30px', fontWeight: '600',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
-              boxShadow: '0 4px 12px rgba(29, 158, 117, 0.4)', fontSize: '15px'
-            }}
-          >
-            <Plus size={18} /> Drop a story
-          </button>
+        {/* Center: Pills */}
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {navPills.map(pill => {
+            const isActive = location.pathname === pill.path || (pill.path !== '/' && location.search.includes(pill.path.split('?')[1]));
+            return (
+              <Link 
+                key={pill.label} 
+                to={pill.path} 
+                className={`glass-pill ${isActive ? 'active' : ''}`}
+                style={{ fontSize: '14px', fontWeight: '600' }}
+              >
+                {pill.label}
+              </Link>
+            );
+          })}
         </div>
 
-        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-          <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', opacity: 0.8, display: 'flex', alignItems: 'center' }}>
-            {theme === 'dark' ? <Sun size={22} /> : <Moon size={22} />}
-          </button>
-          <Link to="/explore" style={{ opacity: 0.8, display: 'flex', alignItems: 'center' }}><Search size={22} /></Link>
+        {/* Right: Search + Auth */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <form onSubmit={handleSearch} style={{ position: 'relative' }}>
+            <Search 
+              size={18} 
+              style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} 
+            />
+            <input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Search place..."
+              disabled={searching}
+              style={{
+                background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: '20px', padding: '8px 16px 8px 38px', color: '#fff', fontSize: '14px',
+                width: '180px', outline: 'none', transition: 'width 0.3s'
+              }}
+              onFocus={e => e.target.style.width = '240px'}
+              onBlur={e => e.target.style.width = '180px'}
+            />
+          </form>
+
           {session ? (
-            <>
-              <Link to={`/users/${session.user.id}`} style={{ opacity: 0.8, display: 'flex', alignItems: 'center' }}><User size={22} /></Link>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Link to={`/users/${session.user.id}`} style={{
+                width: '36px', height: '36px', borderRadius: '50%', overflow: 'hidden', 
+                border: '2px solid var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>
+                <img 
+                  src={session.user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/notionists/svg?seed=${session.user.id}`} 
+                  alt="Avatar" 
+                />
+              </Link>
               <button
-                onClick={async () => {
-                  await supabase.auth.signOut();
-                  toast.success("Successfully logged out");
-                  navigate('/');
-                }}
-                style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer', opacity: 0.8, display: 'flex', alignItems: 'center' }}
+                onClick={() => supabase.auth.signOut()}
+                style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer' }}
+                title="Log Out"
               >
-                <LogOut size={22} />
+                <LogOut size={20} />
               </button>
-            </>
+            </div>
           ) : (
-            <button onClick={() => setShowAuth(true)} style={{
-              background: 'var(--color-accent)', color: 'var(--color-bg)', border: 'none',
-              padding: '8px 16px', borderRadius: '20px', fontWeight: '600',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
-            }}>
-              <LogIn size={16} /> Sign In
+            <button 
+              onClick={() => setShowAuth(true)}
+              style={{
+                background: 'var(--color-primary)', color: '#fff', border: 'none',
+                padding: '8px 20px', borderRadius: '20px', fontWeight: '700',
+                cursor: 'pointer', transition: 'all 0.2s'
+              }}
+              onMouseOver={e => e.target.style.background = 'var(--color-primary-hover)'}
+              onMouseOut={e => e.target.style.background = 'var(--color-primary)'}
+            >
+              Sign In
             </button>
           )}
         </div>

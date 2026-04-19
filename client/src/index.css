@@ -1,19 +1,28 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
 @import 'leaflet/dist/leaflet.css';
 
 :root {
+  /* Typography */
   --font-ui: 'Inter', system-ui, sans-serif;
-  --font-story: Georgia, serif;
+  --font-story: 'Lora', Georgia, serif;
   
-  --color-primary: #B08968;
-  --color-hover: #9C6F4E;
-  --color-accent: #EDE0D4;
-  --color-bg: #1B1B1B;
-
-  --color-memory: var(--color-primary);
-  --color-legend: var(--color-primary);
-  --color-myth: var(--color-primary);
-  --color-news: var(--color-primary);
+  /* Colors - Deep Night Theme */
+  --color-primary: #E8754A; /* Saffron */
+  --color-primary-hover: #D4633B;
+  --color-bg: #0F0C1E; /* Deep Night */
+  --color-surface: rgba(26, 26, 46, 0.8);
+  --color-glass: rgba(255, 255, 255, 0.08);
+  --color-border: rgba(255, 255, 255, 0.12);
+  
+  /* Parchment Theme (Story Cards) */
+  --color-parchment: #F7F3EE;
+  --color-parchment-text: #2A1F14;
+  
+  /* Category Colors */
+  --color-memory: #48BB78;  /* Green */
+  --color-legend: #F6AD55;  /* Marigold */
+  --color-myth: #F687B3;    /* Pink */
+  --color-news: #E8754A;    /* Saffron */
 }
 
 * {
@@ -25,123 +34,139 @@ body {
   font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
   background-color: var(--color-bg);
-  color: var(--color-accent);
+  color: #fff;
   overflow: hidden;
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-body.light {
-  background-color: var(--color-accent);
-  color: var(--color-bg);
+/* Glassmorphism Utility */
+.glass-panel {
+  background: var(--color-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+.glass-pill {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 6px 16px;
+  border-radius: 20px;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
-/* Leaflet overrides */
+.glass-pill.active {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* Leaflet Overrides */
+.leaflet-container {
+  background: #1A1A2E !important;
+}
+
 .leaflet-popup-content-wrapper {
+  background-color: var(--color-parchment) !important;
+  color: var(--color-parchment-text) !important;
   border-radius: 12px;
   padding: 0;
-  border: 1px solid rgba(0,0,0,0.08);
-  box-shadow: none !important;
-  background-color: #fff;
-  color: #111;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4) !important;
 }
 
 .leaflet-popup-content {
-  margin: 0;
-  width: 360px !important;
-  max-width: 90vw;
+  margin: 0 !important;
+  width: 320px !important;
 }
 
 .leaflet-popup-tip-container {
-  display: none !important; /* Hide the little triangle for cleaner look */
+  display: none !important;
 }
 
-/* Map Marker Styles inner div */
-.map-marker {
-  border-radius: 50% 50% 50% 0;
-  cursor: pointer;
-  border: 2px solid rgba(255,255,255,0.4);
-  /* Use string interpolation equivalent for transforms */
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: -2px 2px 8px rgba(0,0,0,0.4);
-  pointer-events: auto; /* Leaflet divIcons need this to be clickable */
-  transform: rotate(-45deg);
-}
-
-.map-marker:hover {
-  transform: rotate(-45deg) scale(1.2);
-  border-color: #fff;
-  z-index: 100;
-}
-
-.map-marker.memory { background-color: var(--color-memory); }
-.map-marker.legend { background-color: var(--color-legend); }
-.map-marker.myth { background-color: var(--color-myth); }
-.map-marker.news { background-color: var(--color-news); }
-
-.map-marker.size-sm { width: 14px; height: 14px; }
-.map-marker.size-md { width: 22px; height: 22px; }
-.map-marker.size-lg { width: 32px; height: 32px; }
-
-/* Pulse animation for dropping pin */
-@keyframes pulseRing {
-  0% { transform: scale(0.5); opacity: 1; }
-  100% { transform: scale(3); opacity: 0; }
-}
-
-.pulse-ring {
-  width: 20px;
-  height: 20px;
+/* Pin Markers */
+.pin-marker {
   border-radius: 50%;
-  background: white;
-  animation: pulseRing 1.2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
-  box-shadow: 0 0 10px rgba(255,255,255,0.8);
+  border: 2px solid #fff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.cursor-crosshair .leaflet-container {
-  cursor: crosshair !important;
+.pin-marker:hover {
+  transform: scale(1.25);
+  z-index: 1000 !important;
 }
 
-/* Bottom Sheet mobile styles */
+.pin-memory { background-color: var(--color-memory); }
+.pin-legend { background-color: var(--color-legend); }
+.pin-myth { background-color: var(--color-myth); }
+.pin-news { background-color: var(--color-news); }
+
+/* Custom Animations */
+@keyframes fadeInSlide {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeInSlide 0.4s ease-out forwards;
+}
+
+/* Parchment Story UI */
+.parchment-card {
+  background-color: var(--color-parchment);
+  color: var(--color-parchment-text);
+  font-family: var(--font-story);
+}
+
+.story-title {
+  font-family: var(--font-story);
+  font-weight: 600;
+  color: var(--color-parchment-text);
+}
+
+.story-body {
+  font-family: var(--font-story);
+  line-height: 1.7;
+  font-size: 16px;
+  color: var(--color-parchment-text);
+  opacity: 0.9;
+}
+
+/* Mobile Bottom Sheet (Parchment) */
 .bottom-sheet {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-  background: #fff;
-  color: #111;
+  background: var(--color-parchment);
+  color: var(--color-parchment-text);
   border-radius: 20px 20px 0 0;
-  z-index: 1000;
-  padding: 20px;
+  z-index: 2000;
+  padding: 24px;
   transform: translateY(100%);
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
-  max-height: 85vh;
-  overflow-y: auto;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
 }
 
 .bottom-sheet.open {
   transform: translateY(0);
 }
 
-@media (max-width: 768px) {
-  .story-popup-desktop {
-    display: none !important;
-  }
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 6px;
 }
-@media (min-width: 769px) {
-  .story-popup-mobile {
-    display: none !important;
-  }
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
 }
 
-.story-body-text {
-  font-family: var(--font-story);
-  line-height: 1.6;
-  font-size: 15px;
-  color: #333;
-}
